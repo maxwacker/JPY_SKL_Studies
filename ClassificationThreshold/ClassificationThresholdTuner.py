@@ -20,25 +20,16 @@
 from sklearn.datasets import make_classification
 from sklearn.tree import DecisionTreeClassifier
 
-Nobs = 100
+Nobs = 64 #16
 Nfeats = 2
 
 X, y = make_classification(n_samples= Nobs, n_features=Nfeats, n_redundant=0, random_state=0)
-classifier = DecisionTreeClassifier(max_depth=2, random_state=0).fit(X, y)
-classifier.predict_proba(X[:4])
-classifier.predict(X[:4])
+#classifier = DecisionTreeClassifier(max_depth=2, random_state=0).fit(X, y)
+#classifier.predict_proba(X[:4])
+#classifier.predict(X[:4])
 
 # %%
 X.shape # -> (obs, vars)  
-
-# %%
-# Simple Plot of Raw data (no train/test split)
-cmp = np.array(['r', 'g', 'b'])
-
-fig = plt.figure(figsize=(12, 9))
-plt.scatter(X[:,0], X[:,1], c=cmp[y], s=50, edgecolors='none')
-plt.show()
-
 
 # %%
 # Spliting Train/Test & Plotting 
@@ -95,23 +86,50 @@ leg.legend_handles[1].set_edgecolor('black')
 plt.show()
 
 # %%
-# Confusion Matix 
+# Confusion Matrix 
 # from: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.ConfusionMatrixDisplay.html
 import matplotlib.pyplot as plt
-from sklearn.datasets import make_classification
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-from sklearn.model_selection import train_test_split
-from sklearn.svm import SVC
-X, y = make_classification(random_state=0)
-X_train, X_test, y_train, y_test = train_test_split(X, y,
-                                                    random_state=0)
-clf = SVC(random_state=0)
-clf.fit(X_train, y_train)
-predictions = clf.predict(X_test)
-cm = confusion_matrix(y_test, predictions, labels=clf.classes_)
+
+predictions = lda.predict(X_test)
+cm = confusion_matrix(y_test, predictions, labels=lda.classes_)
 disp = ConfusionMatrixDisplay(confusion_matrix=cm,
-                              display_labels=clf.classes_)
+                              display_labels=lda.classes_)
 disp.plot()
 plt.show()
+
+# %%
+np.stack(( y_test, predictions), axis=1).shape#[:4,:]
+
+
+# %%
+# Qualifying Predictions
+def true_positives(actuals, predictions):
+    actuals_predictions = np.stack(( actuals, predictions), axis=1)
+    return int(np.sum(np.all(actuals_predictions == [1, 1], axis=1)))
+
+def true_negatives(actuals, predictions):
+    actuals_predictions = np.stack(( actuals, predictions), axis=1)
+    return int(np.sum(np.all(actuals_predictions == [0, 0], axis=1)))
+
+def false_positives(actuals, predictions):
+    actuals_predictions = np.stack(( actuals, predictions), axis=1)
+    return int(np.sum(np.all(actuals_predictions == [0, 1], axis=1)))
+
+def false_negatives(actuals, predictions):
+    actuals_predictions = np.stack(( actuals, predictions), axis=1)
+    return int(np.sum(np.all(actuals_predictions == [1, 0], axis=1)))
+
+
+# %%
+# Commenting Confusion Matrix Result:
+# As seen at begining of NoteBook 
+# TRUE class is GREEN  - (cmp[0] is red, cmp[1] is green)
+
+print(f"true_positives ({true_positives(y_test, predictions)}) : GREEN (empty) circle,\ton RIGHT side of plot,\tDOWN-RIGHT in Confusion Matrix")
+print(f"true_negatives ({true_negatives(y_test, predictions)}) : RED (empty) circle,\ton RIGHT side of plot,\tUP-LEFT in Confusion Matrix")
+print(f"false_positives ({false_positives(y_test, predictions)}) : RED (empty) circle,\ton WRONG side of plot,\tUP-RIGHT in Confusion Matrix")
+print(f"false_negatives ({false_negatives(y_test, predictions)}) : GREEN (empty) circle,\ton WRONG side of plot,\tDOWN-LEFT in Confusion Matrix")
+
 
 # %%
